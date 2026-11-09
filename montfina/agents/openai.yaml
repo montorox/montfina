@@ -1,0 +1,4 @@
+interface:
+  display_name: "Montfina"
+  short_description: "Flat-vector infographic explainers and Shorts"
+  default_prompt: "Use $montfina to make an infographic explainer from my script and voice-over."
