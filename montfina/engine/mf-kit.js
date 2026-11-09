@@ -81,7 +81,7 @@
 
   /* ---------- K.label(x, y, 'Nasdaq', st, {rot, col, bg, size, line:[x2,y2]}): a hand-written paper tag, optionally on a string to a thing ---------- */
   K.label = (x, y, text, st, o = {}) => {
-    const c = MI.ctx, e = appear(st); if (!e) return; MI.ev('pop', st); const size = o.size || 34; c.save(); c.font = font(size * 1.12); const w = c.measureText(text.toUpperCase()).width + size, h = size * 1.6; c.restore();
+    const c = MI.ctx, e = appear(st); if (!e) return; MI.ev('paper', st); const size = o.size || 34; c.save(); c.font = font(size * 1.12); const w = c.measureText(text.toUpperCase()).width + size, h = size * 1.6; c.restore();
     if (o.line) { c.save(); c.strokeStyle = INK(); c.lineWidth = 3; c.beginPath(); c.moveTo(x, y); c.lineTo(o.line[0], o.line[1]); c.stroke(); el(c, o.line[0], o.line[1], 6, 6, INK()); c.restore(); MI.regLine(x, y, o.line[0], o.line[1], text); }
     c.save(); c.translate(x, y); c.rotate(o.rot ?? -.04); c.scale(e, e); rr(c, -w / 2, -h / 2, w, h, 5, o.bg || '#f6f1e2'); c.restore();
     MI.type(text, x, y + size * .36, { size, align: 'center', color: o.col || INK(), start: st + .08, cps: 40 });
@@ -89,10 +89,10 @@
 
   /* ---------- K.chapter(n, 'Crack 4', 'The Plug', st): a big hand-written chapter title with a number that draws itself ---------- */
   K.chapter = (n, title, sub, st, o = {}) => {
-    const c = MI.ctx, d = MI.now - st; if (d < 0) return; MI.ev('whoosh', st, { keep: true }); const x = o.x ?? 90, y = o.y ?? 130, col = o.col || '#f4efe6';
-    c.save(); c.font = font(96, true); c.fillStyle = col; c.globalAlpha = clamp(d / .25); c.translate(lerp(-40, 0, outc(d / .4)), 0); c.fillText(title.toUpperCase(), x, y);
-    if (sub) { c.font = font(56); c.fillText(sub.toUpperCase(), x + 6, y + 70); } c.restore();
-    if (n !== null && n !== undefined) { const cx = o.nx ?? 1720, cy = o.ny ?? 150, p = clamp((d - .2) / .6); c.save(); c.strokeStyle = o.ring || '#7ee05a'; c.lineWidth = 9; c.lineCap = 'round'; c.beginPath(); c.arc(cx, cy, 62, -1.57, -1.57 + p * 6.283); c.stroke(); c.restore(); MI.type(String(n), cx, cy + 30, { size: 80, align: 'center', color: o.ring || '#7ee05a', start: st + .5, cps: 10, sound: false }); }
+    const c = MI.ctx, d = MI.now - st; if (d < 0) return; MI.ev('whoosh', st, { keep: true }); const ctr = !!o.center, x = o.x ?? (ctr ? 960 : 90), y = o.y ?? (ctr ? 600 : 130), col = o.col || '#f4efe6', ts = o.size || (ctr ? 170 : 96);
+    c.save(); c.font = font(ts, true); c.fillStyle = col; c.textAlign = ctr ? 'center' : 'left'; c.globalAlpha = clamp(d / .25); c.translate(ctr ? 0 : lerp(-40, 0, outc(d / .4)), ctr ? lerp(30, 0, outc(d / .4)) : 0); c.fillText(title.toUpperCase(), x, y);
+    if (sub) { c.font = font(Math.round(ts * .5)); c.globalAlpha *= .85; c.fillText(sub.toUpperCase(), ctr ? x : x + 6, y + ts * .78); } c.restore();
+    if (n !== null && n !== undefined) { const cx = o.nx ?? (ctr ? 960 : 1720), cy = o.ny ?? (ctr ? 330 : 150), p = clamp((d - .2) / .6); c.save(); c.strokeStyle = o.ring || '#7ee05a'; c.lineWidth = 9; c.lineCap = 'round'; c.beginPath(); c.arc(cx, cy, 62, -1.57, -1.57 + p * 6.283); c.stroke(); c.restore(); MI.type(String(n), cx, cy + 30, { size: 80, align: 'center', color: o.ring || '#7ee05a', start: st + .5, cps: 10, sound: false }); }
   };
 
   /* ---------- K.ticker(y, {items, speed, h}): a scrolling stock ticker band ---------- */

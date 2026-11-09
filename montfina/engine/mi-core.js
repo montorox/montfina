@@ -40,9 +40,13 @@
   const findFrom = (phrase, from) => { const toks = String(phrase).split(/\s+/).map(w => norm(w).join('')).filter(Boolean); for (let i = from; i + toks.length <= MI.words.length; i++) { let ok = true; for (let j = 0; j < toks.length; j++) if (MI.words[i + j].k !== toks[j]) { ok = false; break; } if (ok) return { s: MI.words[i].s, e: MI.words[i + toks.length - 1].e, i }; } throw new Error(`Narration phrase not found after word ${from}: "${phrase}"`); };
   MI.Q = (phrase, name, A, B, world, screen, o = {}) => {
     const f = phrase === 0 ? { s: .08, i: 0 } : findFrom(phrase, cursor); cursor = f.i + (phrase === 0 ? 0 : 1); const i0 = f.i, same = lastPlate === name; lastPlate = name;
-    MI.shots.push({ st: f.s - .08, trans: o.trans || (same ? 'cut' : 'push'), same, name: o.name || String(phrase), sfx: o.sfx, place: name, i0, camKey: JSON.stringify([A, B]), fn: g => {
+    /* o.cut: [{at: 'phrase', A, B}, ...] new framings inside one shot, a hard cut on the word, the shot itself carries on */
+    const cuts = (o.cut ? [].concat(o.cut) : []).map(c => ({ ...c, t: findFrom(c.at, i0).s - .08 }));
+    MI.shots.push({ st: f.s - .08, trans: o.trans || (same ? 'cut' : 'push'), same, name: o.name || String(phrase), sfx: o.sfx, place: name, i0, cuts: cuts.map(c => c.t), camKey: JSON.stringify([A, B, cuts.map(c => [c.A, c.B])]), fn: g => {
       g.a = (w, d = 0) => findFrom(w, i0).s - .08 + d; g.b = (w, d = 0) => findFrom(w, i0).e + d; const p = MI.getPlate(name); if (!p) throw new Error('No place named ' + name);
-      MI.cam(g, p, A, B); if (world) world(g, p.blanks || {}); MI.uncam(g); if (screen) screen(g, p.blanks || {});
+      let k = -1; cuts.forEach((c, j) => { if (MI.now >= c.t) k = j; });
+      const span = [k >= 0 ? cuts[k].t : g.st, k + 1 < cuts.length ? cuts[k + 1].t : g.en];
+      MI.cam(g, p, k >= 0 ? cuts[k].A : A, k >= 0 ? cuts[k].B : B, span); if (world) world(g, p.blanks || {}); MI.uncam(g); if (screen) screen(g, p.blanks || {});
     } });
   };
 
@@ -57,8 +61,8 @@
     const vw = W / zoom, vh = H / zoom;
     return { zoom, x: clamp(fx * W - vw / 2, 0, W - vw), y: clamp(fy * H - vh / 2, 0, H - vh) };
   };
-  MI.cam = (g, plate, A, B) => {
-    const p = inout((g.t - g.st) / Math.max(.001, g.en - g.st)), ctx = MI.ctx;
+  MI.cam = (g, plate, A, B, span) => {
+    const s0 = span ? span[0] : g.st, s1 = span ? span[1] : g.en, p = inout((g.t - s0) / Math.max(.001, s1 - s0)), ctx = MI.ctx;
     const c = MI.camP(lerp(A[0], B[0], p), lerp(A[1], B[1], p), lerp(A[2], B[2], p));
     ctx.save(); ctx.scale(c.zoom, c.zoom); ctx.translate(-c.x, -c.y);
     plate.draw(ctx); g.incam = true; g.view = c; MI._inCam = true;
@@ -130,7 +134,8 @@
     const over = (a, b) => a.x < b.x + b.w && b.x < a.x + a.w && a.y < b.y + b.h && b.y < a.y + a.h;
     MI.shots.forEach((s, i) => {
       const d = s.en - s.st, rects = s.rects || [], faces = rects.filter(r => r.kind === 'face');
-      if (d > 5) warn(s, `held ${d.toFixed(1)} s, nothing may hold this long`);
+      const segs = [s.st, ...(s.cuts || []), s.en], hold = Math.max(...segs.slice(1).map((x, j) => x - segs[j]));
+      if (hold > 5) warn(s, `held ${hold.toFixed(1)} s, nothing may hold this long`);
       if (i && s.plate && s.plate === MI.shots[i - 1].plate && !s.same) warn(s, 'same place as the previous shot (pass same:true if it is a planned angle change)');
       if (s.plate && s.plate.source === 'image' && s.zoom > 1.33) warn(s, `zoom ${s.zoom.toFixed(2)} on an image plate will look soft`);
       rects.filter(r => r.kind === 'text').forEach(r => {

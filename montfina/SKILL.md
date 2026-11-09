@@ -80,7 +80,7 @@ Renders go in 20 s chunks in the system caches folder (inside the project if tha
 });
 ```
 
-`Q` searches forward from the last shot, so a repeated line cannot land on the wrong moment. `Q(0, ...)` is the first shot. Camera is `[zoom, focusX, focusY]` and always moves. The fifth argument draws in the world, the sixth over it; either can be `null`. Same place as the shot before makes a planned cut. Options: `{trans:'push'|'splat'|'cut', sfx:'whoosh', name}`. `splat` opens a chapter. Inside a shot, `g.st`, `g.en` and `g.d` are its times; `g.a('words', offset)` and `g.b('words', offset)` give start and end times at or after the shot.
+`Q` searches forward from the last shot, so a repeated line cannot land on the wrong moment. `Q(0, ...)` is the first shot. Camera is `[zoom, focusX, focusY]` and always moves. The fifth argument draws in the world, the sixth over it; either can be `null`. Same place as the shot before makes a planned cut. Options: `{trans:'push'|'splat'|'cut', sfx:'whoosh', name, cut}`. `splat` opens a chapter. `cut: [{at: 'words', A: [z, fx, fy], B: [z, fx, fy]}]` makes a hard camera cut inside one shot on those words, for example from the wide room to a face on the punchline; the hold check then measures each piece, so a long line can stay in one place without a 5 s hold. Reframe after a cut so titles and signs are not cropped, or draw a sign only before the cut with `if (MI.now < g.a('words'))`. Inside a shot, `g.st`, `g.en` and `g.d` are its times; `g.a('words', offset)` and `g.b('words', offset)` give start and end times at or after the shot.
 
 Whole words only, apostrophes included: `"It isn't"`, not `'It isn'`. A missing phrase stops the build. Blanks are `b.screen`, `b.board` and so on, never `b` itself. Every place's blanks are in `references/places.md`.
 
@@ -109,7 +109,7 @@ Kit, all in `MI.K`, full arguments in `references/montfina-kit.md`:
 - `K.words(g, 'exact narrated words', {size})` the line appears word by word on the `black` place as it is said. For punchlines and chapter turns only, about 1 in 15 shots.
 - `K.clock(x, y, '3:06 PM ET', st)` a ticking clock with a time chip, for clock-timed sequences.
 - `K.badge(x, y, 'Thursday', st, {col})` a day chip. `K.label(x, y, 'Nasdaq', st, {line:[x2,y2]})` a paper tag on a string.
-- `K.chapter(n, 'Crack 4', 'The Plug', st)` big chapter title with a number that draws itself.
+- `K.chapter(n, 'Crack 4', 'The Plug', st, {center: true})` big chapter title with a number that draws itself. `center: true` sets it large in the middle of a black frame, which reads better at phone size than the top-left default.
 - `K.ticker(y, {seed, down, items})` a scrolling stock band (made-up symbols unless you pass real ones).
 - `K.chart(x, y, w, h, values, st, {col, dur, min, max, label, area})` a line that draws itself. `K.bars(...)` bars that grow.
 - `K.post(x, y, w, {name, handle, text}, st)` a social post. `K.doc(x, y, w, h, {title, sub, quote}, st)` a document with a highlighted quote. Real words only.
