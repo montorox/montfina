@@ -12,6 +12,7 @@ Everything here is in `engine/mf-ink.js`, `engine/mf-kit.js`, `engine/mf-places.
 
 ## Words and labels
 - `K.words(g, 'exact narrated words', {size: 76, color, y, w})` on the `black` place. Words appear as they are said. The phrase must be the narration's words in order.
+- `K.stamp(x, y, 'Job done', st, {col: '#c8352e', sub: 'Week of 3 Nov', size: 72, rot: -.1, back: 'paper' | false, paper, alpha, seed})` a worn rubber ink stamp that slams in (1.9x to 1x in .12 s), wobbles, throws ink flecks and thuds. Default sits on a torn paper slip so it reads on any scene; `back: false` prints straight onto a surface. The wear is fixed per text, so the same stamp looks the same in every frame. About once a minute, on the word it repeats. `MI.stamp` and `stamp` draw it too.
 - `K.badge(x, y, 'Thursday', st, {col, size, rot})`
 - `K.label(x, y, 'Nasdaq', st, {line:[x2,y2], rot, col, bg, size})` a paper tag; `line` draws a string to the thing it names.
 - `K.chapter(n, 'Crack 4', 'The Plug', st, {x, y, nx, ny, ring, col})` call in the screen function. `n` null for no number.

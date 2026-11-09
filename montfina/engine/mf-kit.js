@@ -1,10 +1,56 @@
 /* Montfina kit: the pieces a money-and-news explainer needs. All of it inked, all of it moving.
-   K.words, K.clock, K.badge, K.label, K.chapter, K.ticker, K.chart, K.bars, K.post, K.doc, K.usmap, K.world, K.glow, K.critter, MI.panels */
+   K.words, K.stamp, K.clock, K.badge, K.label, K.chapter, K.ticker, K.chart, K.bars, K.post, K.doc, K.usmap, K.world, K.glow, K.critter, MI.panels */
 (function () {
   const { rr, el, poly, shade } = MI.draw, K = MI.K, { clamp, lerp, inout, outc, pop, spring, hash } = MI;
   const INK = () => MI.INK.col;
   const font = (s, bold) => (bold ? '700 ' : '') + `${s}px ${bold ? 'Kalam, ' : ''}${MI.FONT}`;
   const appear = st => { const d = MI.now - st; return d < 0 ? 0 : pop(d / .3); };
+
+  /* ---------- K.stamp(x, y, 'Job done', st, {col, rot, size, sub, back, seed}): a rubber ink stamp slammed onto the scene on the word ----------
+     Worn ink (specks, scratches, an uneven patch), a double border, a hard landing with a wobble, ink flecks and a thud.
+     back: 'paper' (default) a torn paper slip behind it so it reads on any scene; false stamps straight onto the surface (documents, walls, crates). */
+  const _stamps = {};
+  const rng = s => () => { s |= 0; s = s + 0x6D2B79F5 | 0; let q = Math.imul(s ^ s >>> 15, 1 | s); q = q + Math.imul(q ^ q >>> 7, 61 | q) ^ q; return ((q ^ q >>> 14) >>> 0) / 4294967296; };
+  const stampArt = (text, sub, col, size, seed) => {
+    const key = [text, sub, col, size, seed].join('|'); if (_stamps[key]) return _stamps[key];
+    const fam = `700 ${size}px Kalam, ${MI.FONT}`, sfam = `700 ${Math.round(size * .32)}px Kalam, ${MI.FONT}`;
+    const cv = document.createElement('canvas'), c = cv.getContext('2d'); c.font = fam; c.letterSpacing = `${size * .04}px`;
+    const tw = c.measureText(text).width; c.font = sfam; const sw = sub ? c.measureText(sub).width : 0;
+    const w = Math.max(tw, sw) + size * 1.1, h = size * 1.32 + (sub ? size * .46 : 0), P = size * .2, S = 2;
+    cv.width = (w + P * 2) * S; cv.height = (h + P * 2) * S; c.scale(S, S); c.translate(P, P);
+    c.strokeStyle = c.fillStyle = col; c.lineJoin = 'round';
+    c.lineWidth = size * .1; c.beginPath(); c.roundRect(0, 0, w, h, size * .16); c.stroke();
+    const i = size * .17; c.lineWidth = size * .035; c.beginPath(); c.roundRect(i, i, w - 2 * i, h - 2 * i, size * .08); c.stroke();
+    c.font = fam; c.letterSpacing = `${size * .04}px`; c.textAlign = 'center'; c.textBaseline = 'middle'; c.fillText(text, w / 2, size * .7 + size * .02);
+    if (sub) { c.font = sfam; c.letterSpacing = `${size * .03}px`; c.fillText(sub, w / 2, h - size * .44); c.lineWidth = size * .025; c.beginPath(); c.moveTo(i * 1.6, h - size * .7); c.lineTo(w - i * 1.6, h - size * .7); c.stroke(); }
+    const r = rng(seed); c.globalCompositeOperation = 'destination-out';
+    const n = Math.round(w * h / 70); for (let k = 0; k < n; k++) { c.globalAlpha = .45 + r() * .55; c.beginPath(); c.arc(r() * w, r() * h, .5 + r() * r() * 2.6 * size / 72, 0, 6.283); c.fill(); }
+    c.lineCap = 'round'; for (let k = 0; k < 7; k++) { c.globalAlpha = .5 + r() * .4; c.lineWidth = .8 + r() * 1.6; const x0 = r() * w, y0 = r() * h, a = r() * 6.283, L = size * (.3 + r() * .9); c.beginPath(); c.moveTo(x0, y0); c.lineTo(x0 + Math.cos(a) * L, y0 + Math.sin(a) * L); c.stroke(); }
+    c.globalAlpha = 1; const gx = r() * w, gy = r() * h, gr = Math.max(w, h) * (.35 + r() * .25), gd = c.createRadialGradient(gx, gy, 0, gx, gy, gr); gd.addColorStop(0, 'rgba(0,0,0,.42)'); gd.addColorStop(1, 'rgba(0,0,0,0)'); c.fillStyle = gd; c.fillRect(-P, -P, w + 2 * P, h + 2 * P);
+    return (_stamps[key] = { cv, w, h, P });
+  };
+  K.stamp = (x, y, text, st, o = {}) => {
+    const c = MI.ctx, d = MI.now - st, L = .12; MI.ev('thud', st + L); if (d < 0) return;
+    const up = String(text).toUpperCase(), size = o.size || 72, col = o.col || o.color || '#c8352e', rot = o.rot ?? -.1, seed = o.seed ?? [...up].reduce((a, ch) => a * 31 + ch.charCodeAt(0) | 0, 7);
+    const A = stampArt(up, o.sub ? String(o.sub).toUpperCase() : '', col, size, seed), w = A.w, h = A.h;
+    const s = d < L ? lerp(1.9, 1, (d / L) * (d / L)) : 1 + .06 * Math.sin((d - L) * 42) * Math.exp(-(d - L) * 13), al = clamp(d / .05);
+    c.save(); c.translate(x, y); c.rotate(rot); c.scale(s, s); c.globalAlpha = al;
+    if (o.back !== false) {
+      const bw = w + size * .5, bh = h + size * .42, r = rng(seed + 3), j = () => (r() - .5) * size * .12;
+      MI.noInk(() => { c.fillStyle = 'rgba(20,16,30,.22)'; c.beginPath(); c.roundRect(-bw / 2 + 7, -bh / 2 + 9, bw, bh, 6); c.fill(); });
+      c.save(); c.rotate(rot * -.25); c.fillStyle = o.paper || '#f7f0df'; c.beginPath(); c.moveTo(-bw / 2 + j(), -bh / 2 + j());
+      for (let k = 1; k <= 8; k++) c.lineTo(-bw / 2 + bw * k / 8 + j() * .4, -bh / 2 + j());   /* torn top edge */
+      c.lineTo(bw / 2 + j(), bh / 2 + j()); for (let k = 7; k >= 0; k--) c.lineTo(-bw / 2 + bw * k / 8 + j() * .4, bh / 2 + j()); c.closePath(); c.fill(); c.restore();
+      c.globalCompositeOperation = 'multiply';
+    }
+    c.globalAlpha = al * (o.alpha ?? .94); c.drawImage(A.cv, -w / 2 - A.P, -h / 2 - A.P, w + 2 * A.P, h + 2 * A.P); c.restore();
+    if (d > L && d < L + .35) {   /* ink flecks thrown off the landing */
+      const r = rng(seed + 9), p = (d - L) / .35; MI.noInk(() => { c.save(); c.translate(x, y); c.rotate(rot); c.fillStyle = col;
+        for (let k = 0; k < 12; k++) { const a = r() * 6.283, R0 = Math.hypot(w, h) * .5, R = R0 + (20 + r() * 70) * outc(p); c.globalAlpha = (1 - p) * .8; c.beginPath(); c.arc(Math.cos(a) * R * w / Math.hypot(w, h) * 1.1, Math.sin(a) * R * h / Math.hypot(w, h) * 1.6, 2 + r() * 4, 0, 6.283); c.fill(); } c.restore(); });
+    }
+    MI.regRect('text', x - w / 2, y - h / 2, w, h, up);
+  };
+  MI.stamp = (x, y, text, st, o = {}) => K.stamp(x, y, text, st, o);   /* the MontInfo name draws the Montfina stamp */
 
   /* ---------- K.words(g, 'exact narrated words', {size, color, y}): the line appears word by word as it is said, on the 'black' place ---------- */
   K.words = (g, phrase, o = {}) => {

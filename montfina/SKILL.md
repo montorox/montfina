@@ -105,6 +105,7 @@ Pace on the Citibank film: 11 minutes, 280 shots, 96 plates, 2.4 s a shot. Place
 **Finish.** `MI.FINISH = {vignette, grain, warmth}` over every frame. Set a value to 0 to turn it off.
 
 Kit, all in `MI.K`, full arguments in `references/montfina-kit.md`:
+- `K.stamp(x, y, 'Job done', g.a('done'), {col, sub, size, back, rot})` a worn rubber ink stamp slammed onto the scene on the word, with a wobble, ink flecks and a thud. It is the premium touch: use it for a verdict, a result or a punchline ("Still $6", "Paid in full", "Lowest since 2003"), about once a minute, never two in a row. Call it in the screen function, start it on the word it repeats, keep it clear of faces, and land it in a gap in the voice when there is one. Red for bad news, green (`#2f8a52`) for good, navy (`#24407a`) for official. `back: false` stamps straight onto a document, crate or wall in the scene. `stamp(...)` draws the same thing.
 - `K.words(g, 'exact narrated words', {size})` the line appears word by word on the `black` place as it is said. For punchlines and chapter turns only, about 1 in 15 shots.
 - `K.clock(x, y, '3:06 PM ET', st)` a ticking clock with a time chip, for clock-timed sequences.
 - `K.badge(x, y, 'Thursday', st, {col})` a day chip. `K.label(x, y, 'Nasdaq', st, {line:[x2,y2]})` a paper tag on a string.
